@@ -1,0 +1,71 @@
+name:                nekofs
+version:             0.1.0
+github:              "yxnan/nekofs"
+license:             BSD3
+author:              "yxnan"
+maintainer:          "yxnan@pm.me"
+copyright:           "yxnan <yxnan@pm.me>"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+synopsis:            Create and extract nekodata files
+category:            CLI
+
+description:         Please see the README on GitHub at <https://github.com/yxnan/nekofs#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- cryptonite >= 0.30
+- lz4 >= 0.2.3.1
+- optparse-applicative >= 0.17
+- aeson
+- bytestring >= 0.11
+- attoparsec >= 0.14
+- text
+- utf8-string
+- containers
+- base16-bytestring
+- memory
+- data-serializer
+- mtl
+- directory
+- filepath
+- pipes >= 4.3 && < 4.4
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  nekofs:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - nekofs
+
+tests:
+  nekofs-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - nekofs

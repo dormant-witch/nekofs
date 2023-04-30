@@ -1,0 +1,117 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           nekofs
+version:        0.1.0
+synopsis:       Create and extract nekodata files
+description:    Please see the README on GitHub at <https://github.com/yxnan/nekofs#readme>
+category:       CLI
+homepage:       https://github.com/yxnan/nekofs#readme
+bug-reports:    https://github.com/yxnan/nekofs/issues
+author:         yxnan
+maintainer:     yxnan@pm.me
+copyright:      yxnan <yxnan@pm.me>
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/yxnan/nekofs
+
+library
+  exposed-modules:
+      Nekodata.Checksum
+      Nekodata.Crypto
+      Nekodata.DataBlock
+      Nekodata.FilesMeta
+      Nekodata.Serialization
+      Nekodata.Types
+      NekoFS
+  other-modules:
+      Paths_nekofs
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      aeson
+    , attoparsec >=0.14
+    , base >=4.7 && <5
+    , base16-bytestring
+    , bytestring >=0.11
+    , containers
+    , cryptonite >=0.30
+    , data-serializer
+    , directory
+    , filepath
+    , lz4 >=0.2.3.1
+    , memory
+    , mtl
+    , optparse-applicative >=0.17
+    , pipes ==4.3.*
+    , text
+    , utf8-string
+  default-language: Haskell2010
+
+executable nekofs
+  main-is: Main.hs
+  other-modules:
+      Paths_nekofs
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , attoparsec >=0.14
+    , base >=4.7 && <5
+    , base16-bytestring
+    , bytestring >=0.11
+    , containers
+    , cryptonite >=0.30
+    , data-serializer
+    , directory
+    , filepath
+    , lz4 >=0.2.3.1
+    , memory
+    , mtl
+    , nekofs
+    , optparse-applicative >=0.17
+    , pipes ==4.3.*
+    , text
+    , utf8-string
+  default-language: Haskell2010
+
+test-suite nekofs-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_nekofs
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , attoparsec >=0.14
+    , base >=4.7 && <5
+    , base16-bytestring
+    , bytestring >=0.11
+    , containers
+    , cryptonite >=0.30
+    , data-serializer
+    , directory
+    , filepath
+    , lz4 >=0.2.3.1
+    , memory
+    , mtl
+    , nekofs
+    , optparse-applicative >=0.17
+    , pipes ==4.3.*
+    , text
+    , utf8-string
+  default-language: Haskell2010
