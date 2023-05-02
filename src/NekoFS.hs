@@ -68,9 +68,9 @@ extractNeko nekofile outputDir verify = openBinaryFile nekofile ReadMode
 
 -- | Create a nekodata file from directory
 createNeko :: FilePath -- ^ the directory to be packed into a nekofile
-           -> FilePath -- ^ output directory
+           -> FilePath -- ^ output filename
            -> IO ()
-createNeko sourceDir outputDir = do
+createNeko sourceDir outputFile = do
   exists <- doesDirectoryExist sourceDir
   unless exists $ error
             ("ERR: source directory " ++ show sourceDir ++ " doesn't exist")
@@ -87,13 +87,14 @@ createNeko sourceDir outputDir = do
       metaPath = sourceDir </> "files.meta"
 
       prepareOutFile = do
-        createDirectoryIfMissing True outputDir
-        h <- openBinaryFile outFile WriteMode
+        let outputFile' = if outputFile /= "__placeholder" then outputFile
+                          else last (splitDirectories sourceDir) `addExtension` ".nekodata"
+        createDirectoryIfMissing True (takeDirectory outputFile')
+        h <- openBinaryFile outputFile' WriteMode
         B.hPut h nekofsHeader
         return h
         where
           nekofsHeader = fromString "pixelneko filesystem\0\0\0\0\1"
-          outFile = outputDir </> (last . splitDirectories) sourceDir `addExtension` ".nekodata"
 
       compressFile :: Handle -> [QuasiMeta] -> FilePath -> IO [QuasiMeta]
       compressFile hOut acc file = do

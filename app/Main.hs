@@ -1,6 +1,5 @@
 module Main (main) where
 
-import Data.Maybe (fromMaybe)
 import Options.Applicative
 
 import NekoFS
@@ -18,7 +17,7 @@ data Action
             FilePath -- ^ output directory
             Bool     -- ^ verify?
   | Create FilePath  -- ^ source directory
-           FilePath  -- ^ output directory
+           FilePath  -- ^ output filename
 
 extractOp :: Parser Action
 extractOp = Extract <$> strOption
@@ -26,7 +25,11 @@ extractOp = Extract <$> strOption
                         <> short 'x'
                         <> metavar "NEKOFILE"
                         <> help "The .nekodata file to extract" )
-                    <*> outputDirP
+                    <*> argument str
+                         ( metavar "OUTDIR"
+                        <> help "The output directory"
+                        <> showDefault
+                        <> value "output")
                     <*> switch
                          ( long "verify"
                         <> short 'v'
@@ -38,13 +41,10 @@ createOp = Create <$> strOption
                       <> short 'c'
                       <> metavar "SRCDIR"
                       <> help "Source directory to be packed into a .nekodata file" )
-                  <*> outputDirP
-
-outputDirP :: Parser FilePath
-outputDirP = fromMaybe "output" <$>
-    optional (strOption
-    (  metavar "OUTDIR"
-    <> help "The output directory, default to 'output'" ))
+                  <*> argument str
+                       ( metavar "OUTFILE"
+                      <> help "The output file name (default: SRCDIR.nekodata)"
+                      <> value "__placeholder")
 
 opts :: ParserInfo Action
 opts = info ( extractOp <|> createOp <**> helper)

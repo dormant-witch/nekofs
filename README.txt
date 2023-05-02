@@ -1,14 +1,14 @@
 nekofs: create and extract nekodata files
 
 Usage: nekofs ((-x|--extract NEKOFILE) [OUTDIR] [-v|--verify] |
-                (-c|--create SRCDIR) [OUTDIR])
+                (-c|--create SRCDIR) [OUTFILE])
 
 Available options:
   -x,--extract NEKOFILE    The .nekodata file to extract
-  OUTDIR                   The output directory, default to 'output'
+  OUTDIR                   The output directory (default: "output")
   -v,--verify              verify integrity after extraction
   -c,--create SRCDIR       Source directory to be packed into a .nekodata file
-  OUTDIR                   The output directory, default to 'output'
+  OUTFILE                  The output file name (default: SRCDIR.nekodata)
   -h,--help                Show this help text
 
 Additionally, use the shell auto-completion script:
