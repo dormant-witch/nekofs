@@ -3,28 +3,32 @@ module NekoFS
   , createNeko
   ) where
 
+import           Control.Monad
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
-import           Data.ByteString.UTF8 (toString, fromString)
+import           Data.ByteString.UTF8 (fromString, toString)
+import           Data.Digest.Adler32 as S
+import           Data.Digest.CRC32 as S
 import           Data.Maybe (fromJust)
 
-import           Control.Monad (forM_, forever)
-import           Pipes
-import qualified Pipes.Prelude as P
-import           System.Directory
-import           System.FilePath
-import           System.IO
+import System.Directory
+import System.Exit
+import System.FilePath
+import System.FilePath.Find as F
+import System.IO
 
 import Nekodata.DataBlock
+import Nekodata.FilesMeta
 import Nekodata.Serialization
-import Nekodata.Types
+import Nekodata.Types as T
 
 -- | Extract a nekodata file
 extractNeko :: FilePath -- ^ path to the nekofile
             -> FilePath -- ^ output directory
+            -> Bool     -- ^ verify the output?
             -> IO ()
-extractNeko nekofile outputDir = openBinaryFile nekofile ReadMode
-                             >>= extractAll
+extractNeko nekofile outputDir verify = openBinaryFile nekofile ReadMode
+                                    >>= extractAll
   where
     extractAll :: Handle -> IO ()
     extractAll hNeko = do
@@ -36,12 +40,17 @@ extractNeko nekofile outputDir = openBinaryFile nekofile ReadMode
           createDirectoryIfMissing True outputDir'
           withCurrentDirectory outputDir' $
                             mapM_ (extractFile hNeko) metalist
+          when verify $ putStrLn ("Verifying " ++ show nekofile)
+                        >>  verifyIntegrity outputDir'
+                        >>= \b -> if b then putStrLn "success."
+                                       else putStrLn "integrity check failed."
+                                            >> exitWith (ExitFailure 1)
 
     extractFile :: Handle -> Metadata -> IO ()
     extractFile hNeko meta = do
       let blocklist = getBlockSize meta
           startOffset = fromIntegral $ offset' meta
-          filename = toString $ fileName meta
+          filename = toString $ T.fileName meta
       createDirectoryIfMissing True (takeDirectory filename)
       outFile <- openBinaryFile filename WriteMode
       hSeek hNeko AbsoluteSeek startOffset
@@ -61,33 +70,59 @@ extractNeko nekofile outputDir = openBinaryFile nekofile ReadMode
 createNeko :: FilePath -- ^ the directory to be packed into a nekofile
            -> FilePath -- ^ output directory
            -> IO ()
-createNeko sourceDir outputDir = runEffect $ listRecursive sourceDir
-                                         >-> P.map (makeRelative sourceDir)
-                                         >-> compressFiles
-                                         >-> collect
-  where
-    listRecursive :: FilePath -> Producer FilePath IO ()
-    listRecursive topPath = do
-      entries <- lift $ listDirectory topPath
-      forM_ entries $ \name -> do
-        let path = topPath </> name
-        isDirectory <- lift $ doesDirectoryExist path
-        if isDirectory then listRecursive path
-                       else yield path
+createNeko sourceDir outputDir = do
+  exists <- doesDirectoryExist sourceDir
+  unless exists $ error
+            ("ERR: source directory " ++ show sourceDir ++ " doesn't exist")
+  hOut <- prepareOutFile
+  filelist <- find always filterFile sourceDir
+  qmetaListRev <- foldM (compressFile hOut) [] filelist
+  let filesMeta = makeFilesMeta qmetaListRev
+  B.writeFile metaPath filesMeta
+  qmetaList <- compressFile hOut qmetaListRev metaPath
+  B.hPut hOut $ makeMetadata qmetaList
+  hClose hOut
+    where
+      filterFile = fileType ==? RegularFile &&? F.fileName /=? "files.meta"
+      metaPath = sourceDir </> "files.meta"
 
-
-    compressFiles :: Pipe FilePath (Metadata, ByteString) IO ()
-    compressFiles = forever $ do
-      file <- await
-      lift $ withBinaryFile file ReadMode $ \h ->
-              undefined
-
-    collect :: Consumer (Metadata, ByteString) IO ()
-    collect = do
-      lift $ createDirectoryIfMissing True outputDir
-      hOut <- lift $ openBinaryFile outFile WriteMode
-      lift $ B.hPut hOut nekofsHeader
+      prepareOutFile = do
+        createDirectoryIfMissing True outputDir
+        h <- openBinaryFile outFile WriteMode
+        B.hPut h nekofsHeader
+        return h
         where
           nekofsHeader = fromString "pixelneko filesystem\0\0\0\0\1"
-          outFile = outputDir </> takeBaseName sourceDir `addExtension` ".nekodata"
+          outFile = outputDir </> (last . splitDirectories) sourceDir `addExtension` ".nekodata"
+
+      compressFile :: Handle -> [QuasiMeta] -> FilePath -> IO [QuasiMeta]
+      compressFile hOut acc file = do
+        (sz, csz, crc, crcOrig, adler, bcnt, bszL) <-
+          openBinaryFile file ReadMode >>= compressChunksAccu (0, 0,
+              S.crc32 (mempty :: ByteString),
+              S.crc32 (mempty :: ByteString),
+              S.adler32 (mempty :: ByteString), 0, [])
+        let qOffset = if null acc then 25 -- ^ size of nekofsHeader
+                                  else getCurrentOffset (head acc)
+            file' = makeRelative sourceDir file -- to InternalPath
+        return (Q file' sz csz crc crcOrig adler qOffset bcnt bszL : acc)
+          where
+            getCurrentOffset = (+) <$> compressedSizeQ <*> offsetQ
+
+            compressChunksAccu :: ChunksInfo -> Handle -> IO ChunksInfo
+            compressChunksAccu (sz, csz, crc, crcOrig, adler, bcnt, bszL) hInput = do
+              buf <- B.hGet hInput 32768
+              let len = B.length buf
+              if len == 0
+                then hClose hInput >> return (sz, csz, crc, crcOrig, adler, bcnt, reverse bszL)
+                else do
+                  let blk = fromJust $ compressBlock buf
+                      blksz = B.length blk
+                      bsz = BlockSize blksz len
+                      crc' = S.crc32Update crc blk  -- crc32 of compressed blocks
+                      crcOrig' = S.crc32Update crcOrig buf  -- crc32 of original buffer
+                      adler' = S.adler32Update adler buf  -- adler32 of original buffer
+                  B.hPut hOut blk
+                  compressChunksAccu (sz+len, csz+blksz, crc', crcOrig', adler', bcnt+1, bsz:bszL)
+                                      hInput
 

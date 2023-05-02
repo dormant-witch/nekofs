@@ -7,7 +7,7 @@ maintainer:          "yxnan@pm.me"
 copyright:           "yxnan <yxnan@pm.me>"
 
 extra-source-files:
-- README.md
+- README.txt
 - CHANGELOG.md
 
 synopsis:            Create and extract nekodata files
@@ -19,7 +19,6 @@ dependencies:
 - base >= 4.7 && < 5
 - cryptonite >= 0.30
 - lz4 >= 0.2.3.1
-- optparse-applicative >= 0.17
 - aeson
 - bytestring >= 0.11
 - attoparsec >= 0.14
@@ -29,10 +28,10 @@ dependencies:
 - base16-bytestring
 - memory
 - data-serializer
-- mtl
 - directory
 - filepath
-- pipes >= 4.3 && < 4.4
+- filemanip >= 0.3.6
+- digest >= 0.0.1.7
 
 ghc-options:
 - -Wall
@@ -58,6 +57,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - nekofs
+    - optparse-applicative >= 0.17
 
 tests:
   nekofs-test:

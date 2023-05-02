@@ -1,5 +1,6 @@
 module Nekodata.Serialization
   ( readMetadata
+  , makeMetadata
   , getBlockSize
   ) where
 
@@ -9,6 +10,7 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import           Data.Functor
 import           Data.Maybe (fromJust)
+import           Data.Serializer hiding (size)
 
 import Nekodata.Crypto
 import Nekodata.Types
@@ -83,6 +85,7 @@ disassembleVLQ = foldl (.|.) 0
                . map (fromIntegral . (.&. 0x7f))
                . B.unpack
 
+
 -- ---------------------------------------------------------------------
 -- Utilities regarding the metadata of nekofs
 
@@ -113,4 +116,11 @@ readMetadata h = do
                   >> B.hGet h metaLen
       let metadataB = decrypt metadataRaw
       return $ parseMetadata metadataB
+
+
+-- | Build the metadata bytestring
+makeMetadata :: [QuasiMeta] -> ByteString
+makeMetadata = attachLen . encrypt . toByteString . map fromQuasiMeta
+  where
+    attachLen s = s <> B.reverse (toByteString (ShiftedVLQ $ B.length s))
 
