@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [synchronize, opened, reopened]
+  push:
+    branches: [master]
+
+jobs:
+  stack:
+    name: stack / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        stack: ["2.9.3"]
+        ghc: ["9.2.7"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: haskell/actions/setup@v2
+      name: Setup Haskell Stack
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        stack-version: ${{ matrix.stack }}
+
+    - uses: actions/cache@v3
+      name: Cache dependencies (Unix)
+      if: matrix.os != 'windows-latest'
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-${{ matrix.ghc }}-stack
+
+    - uses: actions/cache@v3
+      name: Cache dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      with:
+        path: |
+          ~\AppData\Roaming\stack
+          ~\AppData\Local\Programs\stack 
+        key: ${{ runner.os }}-${{ matrix.ghc }}-stack
+
+    - name: Install dependencies
+      run: |
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
+
+    - name: Build
+      run: |
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+
+    - name: Test
+      run: |
+        stack test --system-ghc
+
+    - name: Package
+      run: |
+        stack install --system-ghc nekofs --local-bin-path=package
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: nekofs-${{ runner.os }}
+        path: package

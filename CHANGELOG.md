@@ -8,4 +8,10 @@ and this project adheres to the
 
 ## Unreleased
 
-## 0.1.0 - YYYY-MM-DD
+## 0.1.0 - 2023-05-03
+
+### Added
+
+- Extract (assuming compressed)
+- Create (always compress)
+- Optional: verify file integrity after extraction (TODO: could also add in-place verification)

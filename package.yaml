@@ -43,6 +43,7 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -XStrict
 
 library:
   source-dirs: src

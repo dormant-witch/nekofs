@@ -111,5 +111,5 @@ As my understand, the nekodata file is structured like this:
     │                                                │
     └────────────────────────────────────────────────┘
 
-where the VLQ stands for Variable Length Quantity (https://en.wikipedia.org/wiki/Variable-length_quantity), and the ShiftedVLQ means the original value is rotated left by 1 before being turned into a VLQ.
+where the VLQ stands for Variable Length Quantity (little-endian), and the ShiftedVLQ means the original value is rotated left by 1 before being turned into a VLQ.
 
