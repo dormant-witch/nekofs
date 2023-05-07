@@ -8,7 +8,7 @@ Available options:
   OUTDIR                   The output directory (default: "output")
   -v,--verify              verify integrity after extraction
   -c,--create SRCDIR       Source directory to be packed into a .nekodata file
-  OUTFILE                  The output file name (default: SRCDIR.nekodata)
+  OUTFILE                  The output file name (default: "SRCDIR.nekodata")
   -h,--help                Show this help text
 
 Additionally, use the shell auto-completion script:

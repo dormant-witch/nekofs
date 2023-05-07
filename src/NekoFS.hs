@@ -87,7 +87,7 @@ createNeko sourceDir outputFile = do
       metaPath = sourceDir </> "files.meta"
 
       prepareOutFile = do
-        let outputFile' = if outputFile /= "__placeholder" then outputFile
+        let outputFile' = if outputFile /= "SRCDIR.nekodata" then outputFile
                           else last (splitDirectories sourceDir) `addExtension` ".nekodata"
         createDirectoryIfMissing True (takeDirectory outputFile')
         h <- openBinaryFile outputFile' WriteMode

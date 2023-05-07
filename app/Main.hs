@@ -43,8 +43,9 @@ createOp = Create <$> strOption
                       <> help "Source directory to be packed into a .nekodata file" )
                   <*> argument str
                        ( metavar "OUTFILE"
-                      <> help "The output file name (default: SRCDIR.nekodata)"
-                      <> value "__placeholder")
+                      <> help "The output file name"
+                      <> showDefault
+                      <> value "SRCDIR.nekodata")
 
 opts :: ParserInfo Action
 opts = info ( extractOp <|> createOp <**> helper)
