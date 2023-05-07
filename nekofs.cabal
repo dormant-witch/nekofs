@@ -55,6 +55,7 @@ library
     , lz4 >=0.2.3.1
     , memory
     , text
+    , unix-compat
     , utf8-string
   default-language: Haskell2010
 
@@ -83,6 +84,7 @@ executable nekofs
     , nekofs
     , optparse-applicative >=0.17
     , text
+    , unix-compat
     , utf8-string
   default-language: Haskell2010
 
@@ -112,5 +114,6 @@ test-suite nekofs-test
     , memory
     , nekofs
     , text
+    , unix-compat
     , utf8-string
   default-language: Haskell2010

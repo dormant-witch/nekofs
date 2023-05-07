@@ -29,6 +29,7 @@ dependencies:
 - memory
 - data-serializer
 - directory
+- unix-compat
 - filepath
 - filemanip >= 0.3.6
 - digest >= 0.0.1.7

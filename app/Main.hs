@@ -9,6 +9,7 @@ main = execParser opts >>= handleOptions
   where
     handleOptions (Extract file dest verify) = extractNeko file dest verify
     handleOptions (Create dir dest) = createNeko dir dest
+    handleOptions (GenMeta path) = generateMeta path
 
 -- parse command-line options
 
@@ -18,6 +19,7 @@ data Action
             Bool     -- ^ verify?
   | Create FilePath  -- ^ source directory
            FilePath  -- ^ output filename
+  | GenMeta FilePath -- ^ file or directory
 
 extractOp :: Parser Action
 extractOp = Extract <$> strOption
@@ -47,8 +49,15 @@ createOp = Create <$> strOption
                       <> showDefault
                       <> value "SRCDIR.nekodata")
 
+genMetaOp :: Parser Action
+genMetaOp = GenMeta <$> strOption
+                       ( long "meta"
+                      <> short 'm'
+                      <> metavar "FILEPATH"
+                      <> help "Generate \"files.meta\" for this directory or file" )
+
 opts :: ParserInfo Action
-opts = info ( extractOp <|> createOp <**> helper)
+opts = info ( extractOp <|> createOp <|> genMetaOp <**> helper)
   (  fullDesc
   <> header "nekofs: create and extract nekodata files")
 

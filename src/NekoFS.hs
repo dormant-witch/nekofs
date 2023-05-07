@@ -1,6 +1,7 @@
 module NekoFS
   ( extractNeko
   , createNeko
+  , generateMeta
   ) where
 
 import           Control.Monad
@@ -126,4 +127,29 @@ createNeko sourceDir outputFile = do
                   B.hPut hOut blk
                   compressChunksAccu (sz+len, csz+blksz, crc', crcOrig', adler', bcnt+1, bsz:bszL)
                                       hInput
+
+-- | Generate files.meta for a file or directory
+generateMeta :: FilePath -- ^ the file or directory to calculate files.meta
+             -> IO ()
+generateMeta path = do
+  isDir <- doesDirectoryExist path
+  isFile <- doesFileExist path
+  if isDir then genForDir path
+           else if isFile then genForFile path
+                          else error "Not a file or directory"
+  where
+    genForFile f = do
+      let outputDir = takeDirectory f
+          metafile = outputDir </> "files.meta"
+      meta <- withCurrentDirectory outputDir $
+                      makeFilesMeta' [takeFileName f]
+      B.writeFile metafile meta
+
+    genForDir dir = do
+      let metafile = dir </> "files.meta"
+      meta <- withCurrentDirectory dir $
+                        find always (fileType ==? RegularFile) "."
+                        >>= makeFilesMeta' . map (makeRelative ".")
+      B.writeFile metafile meta
+
 

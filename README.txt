@@ -1,7 +1,7 @@
 nekofs: create and extract nekodata files
 
 Usage: nekofs ((-x|--extract NEKOFILE) [OUTDIR] [-v|--verify] |
-                (-c|--create SRCDIR) [OUTFILE])
+                (-c|--create SRCDIR) [OUTFILE] | (-m|--meta FILEPATH))
 
 Available options:
   -x,--extract NEKOFILE    The .nekodata file to extract
@@ -9,6 +9,7 @@ Available options:
   -v,--verify              verify integrity after extraction
   -c,--create SRCDIR       Source directory to be packed into a .nekodata file
   OUTFILE                  The output file name (default: "SRCDIR.nekodata")
+  -m,--meta FILEPATH       Generate "files.meta" for this directory or file
   -h,--help                Show this help text
 
 Additionally, use the shell auto-completion script:

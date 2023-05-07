@@ -2,6 +2,7 @@
 
 module Nekodata.FilesMeta
   ( makeFilesMeta
+  , makeFilesMeta'
   , verifyIntegrity
   ) where
 
@@ -16,6 +17,7 @@ import           Data.Word
 import Control.Monad (unless)
 import GHC.Generics
 import System.Directory
+import System.PosixCompat.Files (fileSize, getFileStatus)
 import Text.Printf
 
 import Nekodata.Checksum
@@ -52,6 +54,19 @@ makeFilesMeta qlist = B.toStrict $ encode $ FilesMeta filesmap []
                   , crc32   = crc32OrigQ q
                   , size    = sizeQ q
                   }
+
+makeFilesMeta' :: [FilePath] -> IO ByteString
+makeFilesMeta' filelist = do
+  filespair <- mapM toFilePair filelist
+  return (B.toStrict $ encode $ FilesMeta (M.fromList filespair) [])
+    where
+      toFilePair :: FilePath -> IO (FilePath, Checksums)
+      toFilePair f = do
+        adler <- adler32ofFile f
+        crc   <- crc32ofFile f
+        sz    <- fromIntegral . fileSize <$> getFileStatus f
+        return (f, Checksums adler crc sz)
+
 
 verifyIntegrity :: FilePath  -- ^ output directory
                 -> IO Bool

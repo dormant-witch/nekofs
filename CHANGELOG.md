@@ -15,3 +15,10 @@ and this project adheres to the
 - Extract (assuming compressed)
 - Create (always compress)
 - Optional: verify file integrity after extraction (TODO: could also add in-place verification)
+
+## 0.2.0 - 2023-05-08
+
+### Added
+
+- Generate `files.meta` for directory or file (using `-m` option)
+
