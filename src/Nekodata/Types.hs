@@ -18,7 +18,7 @@ module Nekodata.Types
 import           Data.Bits
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as C8
+import           Data.ByteString.UTF8 (fromString)
 import           Data.Coerce (coerce)
 import           Data.Word (Word32, Word8)
 
@@ -129,7 +129,7 @@ offset' = coerce . offset
 -- | Convert QuasiMeta to Metadata
 fromQuasiMeta :: QuasiMeta -> Metadata
 fromQuasiMeta (Q fn sz csz crc _ _ ofst bcnt bszL) = Metadata
-      { fileName        = C8.pack fn
+      { fileName        = fromString fn
       , tag             = 2     -- ^ 2 for any compressed nekodata file
       , size            = ShiftedVLQ sz
       , compressedSize  = ShiftedVLQ csz
@@ -149,5 +149,5 @@ toBlockPos = go [BlockPos (ShiftedVLQ 0) (ShiftedVLQ 0)]
                          (ShiftedVLQ $ inflateOffset' p + inflateSize s)
       in go (pos:posL) ss
 
-    go _ _ = undefined -- impossible
+    go _ _ = error "Exceeded size or file limit for nekodata files"
 

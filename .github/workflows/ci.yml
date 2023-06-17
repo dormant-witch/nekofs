@@ -16,6 +16,16 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         stack: ["2.9.3"]
         ghc: ["9.2.7"]
+        include:
+          - os: ubuntu-latest
+            executable: nekofs-linux-x86_64
+            mv_cmd: mv
+          - os: macOS-latest
+            executable: nekofs-macos-x86_64
+            mv_cmd: mv
+          - os: windows-latest
+            executable: nekofs-windows.exe
+            mv_cmd: rename
 
     steps:
     - uses: actions/checkout@v3
@@ -39,7 +49,7 @@ jobs:
       with:
         path: |
           ~\AppData\Roaming\stack
-          ~\AppData\Local\Programs\stack 
+          ~\AppData\Local\Programs\stack
         key: ${{ runner.os }}-${{ matrix.ghc }}-stack
 
     - name: Install dependencies
@@ -58,8 +68,21 @@ jobs:
       run: |
         stack install --system-ghc nekofs --local-bin-path=package
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+    - name: Set release tag
+      run: echo "RELEASE_TAG=v$(stack --system-ghc query locals nekofs version)" >> $GITHUB_ENV
+
+    - name: Rename binary
+      run: |
+        ${{ matrix.mv_cmd }} package/nekofs* ${{ matrix.executable }}
+
+    - name: Extract release notes
+      id: get_changelog
+      uses: ffurrer2/extract-release-notes@v1
+
+    - name: Update Release
+      uses: softprops/action-gh-release@v1
       with:
-        name: nekofs-${{ runner.os }}
-        path: package
+        tag_name: ${{ env.RELEASE_TAG }}
+        files: ${{ matrix.executable }}
+        body: ${{ steps.get_changelog.outputs.release_notes }}
+
