@@ -8,6 +8,12 @@ and this project adheres to the
 
 ## [Unreleased]
 
+## [0.2.2] - 2024-02-22
+
+### Fixed
+
+- Normalize path separator to Unix format (issue #2)
+
 ## [0.2.1] - 2023-06-12
 
 ### Fixed

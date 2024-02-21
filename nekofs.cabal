@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           nekofs
-version:        0.2.1
+version:        0.2.2
 synopsis:       Create and extract nekodata files
 description:    Please see the README on GitHub at <https://github.com/yxnan/nekofs#readme>
 category:       CLI

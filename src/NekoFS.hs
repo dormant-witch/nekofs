@@ -66,6 +66,8 @@ extractNeko nekofile outputDir verify = openBinaryFile nekofile ReadMode
               B.hPut hOut block'
               extract' hOut bs
 
+normalizePathSep :: FilePath -> FilePath
+normalizePathSep = map (\c -> if c == '\\' then '/' else c)   -- issue #2
 
 -- | Create a nekodata file from directory
 createNeko :: FilePath -- ^ the directory to be packed into a nekofile
@@ -106,7 +108,7 @@ createNeko sourceDir outputFile = do
               S.adler32 (mempty :: ByteString), 0, [])
         let qOffset = if null acc then 25 -- ^ size of nekofsHeader
                                   else getCurrentOffset (head acc)
-            file' = makeRelative sourceDir file -- to InternalPath
+            file' = normalizePathSep $ makeRelative sourceDir file -- to InternalPath
         return (Q file' sz csz crc crcOrig adler qOffset bcnt bszL : acc)
           where
             getCurrentOffset = (+) <$> compressedSizeQ <*> offsetQ
@@ -149,7 +151,7 @@ generateMeta path = do
       let metafile = dir </> "files.meta"
       meta <- withCurrentDirectory dir $
                         find always (fileType ==? RegularFile) "."
-                        >>= makeFilesMeta' . map (makeRelative ".")
+                        >>= makeFilesMeta' . map (normalizePathSep . makeRelative ".")
       B.writeFile metafile meta
 
 

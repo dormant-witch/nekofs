@@ -10,6 +10,8 @@ on:
 jobs:
   stack:
     name: stack / ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    permissions:
+      contents: write
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
