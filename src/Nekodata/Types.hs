@@ -24,8 +24,8 @@ import           Data.Word (Word32, Word8)
 
 import Data.Serializer hiding (size)
 
-newtype IntVLQ = IntVLQ Int
-newtype ShiftedVLQ = ShiftedVLQ Int
+newtype IntVLQ = IntVLQ Int deriving Show
+newtype ShiftedVLQ = ShiftedVLQ Int deriving Show
 
 instance Serializable IntVLQ where
   put v = byteString $ makeVLQ v
@@ -36,14 +36,14 @@ instance Serializable ShiftedVLQ where
 -- | Entry of the metadata section at the end of nekofs file
 data Metadata = Metadata
   { fileName       :: ByteString
-  , tag            :: Word8 -- ^ 2 for all of the compressed nekodata
+  , tag            :: Word8 -- ^ 0-store, 2-compressed
   , size           :: ShiftedVLQ
   , compressedSize :: ShiftedVLQ
   , crc32          :: IntVLQ
   , offset         :: IntVLQ
   , totalBlocks    :: ShiftedVLQ
   , blockList      :: [BlockPos]
-  }
+  } deriving Show
 
 instance Serializable Metadata where
   put meta = byteString (makeShiftedVLQ len) -- ^ length of filename
@@ -89,7 +89,7 @@ type ChunksInfo =
 data BlockPos = BlockPos
   { deflateOffset :: ShiftedVLQ
   , inflateOffset :: ShiftedVLQ
-  }
+  } deriving Show
 
 instance Serializable [BlockPos] where
   put []     = mempty

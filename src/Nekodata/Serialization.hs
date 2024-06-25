@@ -4,13 +4,17 @@ module Nekodata.Serialization
   , getBlockSize
   ) where
 
+import           Control.Applicative ((<|>))
+import           Control.Monad (when)
 import           Data.Attoparsec.ByteString as P
 import           Data.Bits
+import           Data.ByteString.Builder (toLazyByteString, byteStringHex)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import           Data.Functor
 import           Data.Maybe (fromJust)
-import           Data.Serializer hiding (size)
+import           Data.Either (isLeft)
+import           Data.Serializer hiding (size, toLazyByteString)
 
 import Nekodata.Crypto
 import Nekodata.Types
@@ -21,7 +25,7 @@ parseMetadata :: ByteString -> Either String [Metadata]
 parseMetadata = parseOnly (metadataParser <* endOfInput)
 
 metadataParser :: Parser [Metadata]
-metadataParser = shiftedVLQParser' >>= flip count entryParser
+metadataParser = shiftedVLQParser' >>= flip count (entryParser <|> entry0Parser)
 
 intVLQParser :: Parser IntVLQ
 intVLQParser = IntVLQ <$> intVLQParser'
@@ -49,13 +53,24 @@ peekShiftedVLQ = do
 
 entryParser :: Parser Metadata
 entryParser = Metadata <$> (shiftedVLQParser' >>= P.take)   -- fileName
-                       <*> anyWord8                         -- tag
+                       <*> P.word8 0x02                     -- tag
                        <*> shiftedVLQParser                 -- size
                        <*> shiftedVLQParser                 -- compressedSize
                        <*> intVLQParser                     -- crc32
                        <*> intVLQParser                     -- offset
                        <*> peekShiftedVLQ                   -- totalBlocks
                        <*> blockListParser                  -- blockList
+
+entry0Parser :: Parser Metadata
+entry0Parser = Metadata <$> (shiftedVLQParser' >>= P.take)   -- fileName
+                        <*> P.word8 0x00                     -- tag
+                        <*> shiftedVLQParser                 -- size
+                        <*> return (ShiftedVLQ 0)            -- [x] compressedSize
+                        <*> intVLQParser                     -- crc32
+                        <*> intVLQParser                     -- offset
+                        <*> return (ShiftedVLQ 0)            -- [x] totalBlocks
+                        <*> return []                        -- [x] blockList
+               <* P.word8 0
 
 
 blockListParser :: Parser [BlockPos]
@@ -115,7 +130,10 @@ readMetadata h = do
       metadataRaw <- hSeek h SeekFromEnd (- fromIntegral metaLen - fromIntegral vlen)
                   >> B.hGet h metaLen
       let metadataB = decrypt metadataRaw
-      return $ parseMetadata metadataB
+      let meta = parseMetadata metadataB
+      when (isLeft meta) $
+                putStrLn ("Failed at parsing metadata: " ++ show (toLazyByteString $ byteStringHex metadataB))
+      return meta
 
 
 -- | Build the metadata bytestring

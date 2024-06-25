@@ -11,6 +11,7 @@ import           Data.ByteString.UTF8 (fromString, toString)
 import           Data.Digest.Adler32 as S
 import           Data.Digest.CRC32 as S
 import           Data.Maybe (fromJust)
+import           Data.Coerce (coerce)
 
 import System.Directory
 import System.Exit
@@ -49,13 +50,13 @@ extractNeko nekofile outputDir verify = openBinaryFile nekofile ReadMode
 
     extractFile :: Handle -> Metadata -> IO ()
     extractFile hNeko meta = do
-      let blocklist = getBlockSize meta
-          startOffset = fromIntegral $ offset' meta
+      let startOffset = fromIntegral $ offset' meta
           filename = toString $ T.fileName meta
       createDirectoryIfMissing True (takeDirectory filename)
       outFile <- openBinaryFile filename WriteMode
       hSeek hNeko AbsoluteSeek startOffset
-      extract' outFile blocklist
+      if tag meta == 2 then extract' outFile (getBlockSize meta)
+                       else extract0' outFile (coerce $ size meta)
         where
           extract' hOut []     = hClose hOut
           extract' hOut (b:bs) = do
@@ -65,6 +66,9 @@ extractNeko nekofile outputDir verify = openBinaryFile nekofile ReadMode
               let block' = fromJust $ decompressBlock infsize defsize block
               B.hPut hOut block'
               extract' hOut bs
+
+          extract0' hOut storeSize = B.hPut hOut <$> B.hGet hNeko storeSize
+                                  >> hClose hOut
 
 normalizePathSep :: FilePath -> FilePath
 normalizePathSep = map (\c -> if c == '\\' then '/' else c)   -- issue #2
