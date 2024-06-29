@@ -15,24 +15,29 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-20.04, macos-13, windows-latest]
         stack: ["2.9.3"]
         ghc: ["9.2.7"]
         include:
           - os: ubuntu-latest
             executable: nekofs-linux-x86_64
-          - os: macOS-latest
+          - os: ubuntu-20.04
+            executable: nekofs-debian-11-x86_64
+          - os: macos-13
             executable: nekofs-macos-x86_64
+          # - os: macos-latest    # stack is not ready yet
+          #   executable: nekofs-macos-aarch64
           - os: windows-latest
             executable: nekofs-windows.exe
 
     steps:
     - uses: actions/checkout@v3
 
-    - uses: haskell/actions/setup@v2
+    - uses: haskell-actions/setup@v2
       name: Setup Haskell Stack
       with:
         ghc-version: ${{ matrix.ghc }}
+        enable-stack: true
         stack-version: ${{ matrix.stack }}
 
     - uses: actions/cache@v3
@@ -81,6 +86,7 @@ jobs:
       uses: ffurrer2/extract-release-notes@v1
 
     - name: Update Release
+      if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ env.RELEASE_TAG }}

@@ -8,6 +8,8 @@ and this project adheres to the
 
 ## [Unreleased]
 
+## [0.3.0] - 2024-06-25
+
 ### Added
 
 - Support for extraction of type-0 (store) nekofile entries.
