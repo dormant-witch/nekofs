@@ -31,7 +31,7 @@ jobs:
             executable: nekofs-windows.exe
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: haskell-actions/setup@v2
       name: Setup Haskell Stack
@@ -40,14 +40,14 @@ jobs:
         enable-stack: true
         stack-version: ${{ matrix.stack }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache dependencies (Unix)
       if: matrix.os != 'windows-latest'
       with:
         path: ~/.stack
         key: ${{ runner.os }}-${{ matrix.ghc }}-stack
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache dependencies (Windows)
       if: matrix.os == 'windows-latest'
       with:
@@ -83,11 +83,11 @@ jobs:
 
     - name: Extract release notes
       id: get_changelog
-      uses: ffurrer2/extract-release-notes@v1
+      uses: ffurrer2/extract-release-notes@v2
 
     - name: Update Release
       if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.RELEASE_TAG }}
         files: ${{ matrix.executable }}
