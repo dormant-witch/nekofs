@@ -58,14 +58,15 @@ makeFilesMeta qlist = B.toStrict $ encode $ FilesMeta filesmap []
 makeFilesMeta' :: [FilePath] -> IO ByteString
 makeFilesMeta' filelist = do
   filespair <- mapM toFilePair filelist
-  return (B.toStrict $ encode $ FilesMeta (M.fromList filespair) [])
-    where
-      toFilePair :: FilePath -> IO (FilePath, Checksums)
-      toFilePair f = do
-        adler <- adler32ofFile f
-        crc   <- crc32ofFile f
-        sz    <- fromIntegral . fileSize <$> getFileStatus f
-        return (f, Checksums adler crc sz)
+  let filteredFilesPair = filter (\(f, _) -> f /= "version.meta") filespair
+  return (B.toStrict $ encode $ FilesMeta (M.fromList filteredFilesPair) [])
+  where
+    toFilePair :: FilePath -> IO (FilePath, Checksums)
+    toFilePair f = do
+      adler <- adler32ofFile f
+      crc   <- crc32ofFile f
+      sz    <- fromIntegral . fileSize <$> getFileStatus f
+      return (f, Checksums adler crc sz)
 
 
 verifyIntegrity :: FilePath  -- ^ output directory
