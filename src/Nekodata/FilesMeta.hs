@@ -46,7 +46,7 @@ instance ToJSON FilesMeta
 makeFilesMeta :: [QuasiMeta] -> ByteString
 makeFilesMeta qlist = B.toStrict $ encode $ FilesMeta filesmap []
   where
-    filesmap = M.fromList $ map toFilePair qlist
+    filesmap = M.fromList [ toFilePair x | x <- qlist, fileNameQ x /= "version.meta" ]
     toFilePair q = (fileNameQ q, chksum)
       where
         chksum = Checksums
