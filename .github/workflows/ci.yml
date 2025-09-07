@@ -16,8 +16,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, ubuntu-20.04, macos-13, windows-latest]
-        stack: ["2.9.3"]
-        ghc: ["9.2.7"]
+        stack: ["3.7.1"]
+        ghc: ["9.10.2"]
         include:
           - os: ubuntu-latest
             executable: nekofs-linux-x86_64
